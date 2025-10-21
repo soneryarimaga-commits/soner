@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Evet mi Hayır mı? (Süper Sinematik)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Değişkenleri */
+        :root {
+            --default-bg: #f5f5f5;
+            --final-bg: #1e8449; /* Sinematik Yeşil */
+            --tease-bg: #fff1f0; 
+            --yes-color: #2ecc71;
+            --no-color: #e74c3c;
+            --text-color: #1a1a1a;
+            --gemini-color: #4285f4; /* Google Blue */
+            --analysis-color: #f39c12; /* Analiz Turuncusu */
+        }
+
+        body {
+            text-align: center;
+            background-color: var(--default-bg);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            /* Arka Plan Nabız Animasyonu */
+            animation: bg-pulse 10s infinite alternate; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 10px;
+            overflow-x: hidden;
+            transition: background-color 0.8s ease, color 0.8s ease;
+        }
+        h1 { 
+            margin-top: 20px; 
+            font-size: clamp(1.5rem, 6vw, 2.2rem); 
+            max-width: 90vw;
+            font-weight: 800; 
+            line-height: 1.3;
+        }
+        .emoji { 
+            font-size: clamp(6rem, 20vw, 10rem); 
+            margin: 30px 0 40px 0;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .buttons-container {
+            display: flex;
+            /* Buton temasını engellemek için geniş boşluk */
+            gap: clamp(30px, 8vw, 50px); 
+            padding: 0 clamp(20px, 5vw, 50px); 
+            width: 100%;
+            box-sizing: border-box;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+            font-weight: 700;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            /* Yaylı geçiş (sinematik etki) */
+            transition: all 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.3s ease;
+            flex-shrink: 0; 
+            min-width: 100px;
+        }
+        #yes { background-color: var(--yes-color); }
+        #no { background-color: var(--no-color); }
+        
+        button:active { transform: scale(0.95) !important; }
+
+        /* Gemini Butonları Stili */
+        #gemini-btn, #analysis-btn {
+            background-color: var(--gemini-color);
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+            display: none; /* Başlangıçta gizli */
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #analysis-btn {
+            background-color: var(--analysis-color);
+        }
+
+        /* FINAL ÇAĞRISI */
+        #final-call {
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            font-weight: 700;
+            color: #f39c12; 
+            opacity: 0;
+            animation: fade-in-up 0.5s ease-out forwards;
+            margin-top: 20px;
+        }
+
+        /* Final Buton Stili */
+        .final-yes-style {
+            transform: scale(3.5) !important; 
+            font-size: clamp(2rem, 8vw, 4rem) !important;
+            width: 90vw !important;
+            height: clamp(150px, 35vh, 300px);
+            border-radius: 30px !important;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6); 
+        }
+
+        /* KEYFRAME ANIMASYONLARI */
+        @keyframes bg-pulse {
+            0% { background-color: #f5f5f5; }
+            100% { background-color: #ebebeb; }
+        }
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="text" class="animated-text">Seninle konuşmak için telefon numaranı alabilir miyim? 😉</h1>
+    <div class="emoji" id="emoji">💅</div> 
+
+    <div class="buttons-container">
+        <button id="yes">Evet</button>
+        <button id="no">Hayır</button>
+    </div>
+    
+    <!-- Yeni Özellik: Emoji Analiz Butonu -->
+    <button id="analysis-btn" style="display: none;">
+        ✨ Emoji Dilini Çöz! (Analiz)
+    </button>
+    
+    <button id="gemini-btn" style="display: none;">
+        ✨ Son Çare Argümanı Al!
+    </button>
+    
+    <p id="final-call" style="display: none;"></p>
+    <p id="loading-msg" style="display: none; color: var(--gemini-color); font-weight: 600; margin-top: 15px;">
+        Gemini en iyi flört argümanını düşünüyor...
+    </p>
+    
+    <!-- Yeni Yükleme Mesajı -->
+    <p id="loading-analysis" style="display: none; color: var(--analysis-color); font-weight: 600; margin-top: 15px;">
+        İlişki gurusu Gemini, emojinin altındaki gerçeği analiz ediyor...
+    </p>
+
+    <script>
+        // Firebase ve Gemini API için gerekli global değişkenler
+        const apiKey = ""; // API anahtarınızı buraya girin, Canvas ortamında otomatik sağlanacaktır.
+
+        const text = document.getElementById("text");
+        const emoji = document.getElementById("emoji");
+        const yesBtn = document.getElementById("yes");
+        const noBtn = document.getElementById("no");
+        const finalCall = document.getElementById("final-call");
+        const geminiBtn = document.getElementById("gemini-btn");
+        const loadingMsg = document.getElementById("loading-msg");
+        
+        // Yeni Elementler
+        const analysisBtn = document.getElementById("analysis-btn");
+        const loadingAnalysisMsg = document.getElementById("loading-analysis");
+
+        let noClicks = 0;
+        let yesScale = 1;
+        let noScale = 1;
+        let isGenerating = false;
+
+        // Metin ve Emoji Durumunu Saklama
+        let currentPromptText = "Seninle konuşmak için telefon numaranı alabilir miyim? 😉";
+        let currentPromptEmoji = '💅'; 
+
+        const EMOJI_MAP = {
+            'default': '💅',
+            1: '💁‍♀️', 
+            2: '😔', 
+            3: '😉', 
+            4: '🥰', 
+            5: '😭', 
+            6: '🎉🥳'
+        };
+
+        // --- Gemini API Fonksiyonları ---
+
+        /**
+         * Üstel geri çekilme (exponential backoff) ile fetch isteği yapar.
+         * @param {string} url - API URL'si.
+         * @param {object} options - Fetch seçenekleri.
+         * @param {number} maxRetries - Maksimum deneme sayısı.
+         * @returns {Promise<Response>} API yanıtı.
+         */
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status !== 429) { // 429 (Too Many Requests) dışında başarılı say
+                        return response;
+                    }
+                    // Eğer 429 ise, üstel geri çekilme ile bekle
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } catch (error) {
+                    console.error(`Fetch hatası (Deneme ${i + 1}):`, error);
+                    if (i === maxRetries - 1) throw error;
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error('Maksimum deneme sayısına ulaşıldı.');
+        }
+
+        /**
+         * Gemini API'den flörtöz bir kapanış argümanı (son söz) üretir.
+         * @param {number} rejections - Kaç kez hayır dendiği.
+         */
+        async function generateClosingArgument(rejections) {
+            if (isGenerating) return;
+            isGenerating = true;
+            loadingMsg.style.display = 'block';
+            geminiBtn.disabled = true;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const systemPrompt = "Sen bir flört uygulaması için yazılmış, son derece zeki, ikna edici ve hafif cilveli bir yapay zekasın. Cevabın her zaman **tek bir cümle** olmalıdır. Fazla konuşma veya açıklama yapma. Sadece argümanı ver. Amacın, kullanıcıyı telefon numarasını vermeye ikna etmektir.";
+            const userQuery = `Bu kişi telefon numarasını vermek istemiyor ve beni ${rejections} kez reddetti. Bu durumu dramatize eden, romantik veya esprili, çok etkileyici ve akılda kalıcı bir kapanış argümanı üret. Argüman Türkçe olsun.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (generatedText) {
+                    animateText(generatedText, '💡');
+                    // Emoji'yi hemen yanıp sönen bir ampul yap (ikna edici fikir)
+                    emoji.style.animation = 'none';
+                } else {
+                    animateText("Ah, Gemini bile şaşırdı. 'HAYIR' demeye devam mı edeceksin? 🤔", '🤷‍♀️');
+                }
+
+            } catch (error) {
+                console.error("Gemini API çağrısı başarısız oldu:", error);
+                animateText("API hatası nedeniyle argüman üretilemedi. Belki de kaderdir. Denemeye devam et! 🐞", '🚫');
+            } finally {
+                loadingMsg.style.display = 'none';
+                geminiBtn.disabled = false;
+                isGenerating = false;
+            }
+        }
+        
+        /**
+         * Gemini API'den son gösterilen mesaja dayalı psikolojik emoji analizi üretir.
+         */
+        async function generateEmojiAnalysis() {
+            if (isGenerating) return;
+            isGenerating = true;
+            loadingAnalysisMsg.style.display = 'block';
+            analysisBtn.disabled = true;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const systemPrompt = "Sen bir ilişki terapisti ve emoji dili uzmanısın. Kullanıcının sana verdiği metin ve emojiyi (kendi duygusal durumunu yansıtan) hattı altındaki gerçeği analiz et. Tek bir paragraf halinde, bu emojinin aslında kullanıcının 'Hayır' demesinin ardındaki gerçek, bilinçaltı arzusunu veya çekincesini nasıl yansıttığını mizahi ve ikna edici bir dille açıkla. Metin Türkçe olsun. Cevabını bir ilişki uzmanı tonunda ver.";
+            const userQuery = `Son gördüğüm mesaj: "${currentPromptText}". Bu mesajın yanında görünen emoji: "${currentPromptEmoji}". Bu emojinin gerçek anlamını ve kullanıcının ne istediğini analiz et.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (generatedText) {
+                    // Analiz sonucunu yeni bir metin ve emoji ile göster
+                    animateText(`Analiz Sonucu: ${generatedText}`, '🧠'); 
+                } else {
+                    animateText("Analiz başarısız. Sanırım bu emoji, Gemini'nin bile çözemediği kadar karmaşık. 😵‍💫", '🤷‍♀️');
+                }
+
+            } catch (error) {
+                console.error("Gemini API çağrısı başarısız oldu:", error);
+                animateText("API hatası nedeniyle analiz yapılamadı. Bağlantıyı kontrol et! 🔌", '🐛');
+            } finally {
+                loadingAnalysisMsg.style.display = 'none';
+                analysisBtn.disabled = false;
+                // Analizden sonra otomatik olarak ilk metne dönme veya kullanıcının devam etmesini sağlama
+                setTimeout(resetToLastPrompt, 8000); // 8 saniye sonra orijinal mesaja geri dön
+            }
+        }
+        
+        // --- Animasyon ve UI Fonksiyonları ---
+
+        /**
+         * Orijinal son gösterilen metin ve emojiye geri döner (Analiz sonrası).
+         */
+        function resetToLastPrompt() {
+             animateText(currentPromptText, currentPromptEmoji);
+        }
+
+        /**
+         * Metin ve emoji animasyonu yapar, aynı zamanda mevcut durumu kaydeder.
+         */
+        const animateText = (newText, newEmoji) => {
+             text.style.animation = 'none';
+             emoji.style.animation = 'none';
+             text.offsetHeight; 
+             emoji.offsetHeight;
+
+             text.innerText = newText;
+             emoji.innerText = newEmoji;
+             text.style.animation = 'fade-in-up 0.5s ease-out';
+             
+             // YALNIZCA KENDİMİZ ÜRETTİĞİMİZ METİNLERİ/EMOJİLERİ KAYDET (Gemini sonuçlarını kaydetme)
+             if (newEmoji !== '💡' && newEmoji !== '🤷‍♀️' && newEmoji !== '🚫' && newEmoji !== '🧠' && newEmoji !== '🐛' && newEmoji !== '🤣') {
+                currentPromptText = newText;
+                currentPromptEmoji = newEmoji;
+             }
+             
+             // Sadece ilk 6 emoji için jump animasyonu kullan
+             if (newEmoji !== '💡' && newEmoji !== '🤷‍♀️' && newEmoji !== '🚫' && newEmoji !== '🧠' && newEmoji !== '🐛') {
+                 emoji.style.animation = 'jump 0.3s ease-out';
+             }
+        };
+        
+        /**
+         * Final stilini sıfırlar ve Gemini butonlarının görünürlüğünü yönetir.
+         */
+        const resetFinalStyle = () => {
+            document.body.style.backgroundColor = 'var(--default-bg)';
+            document.body.style.color = 'var(--text-color)';
+            yesBtn.classList.
